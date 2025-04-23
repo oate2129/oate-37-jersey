@@ -1,0 +1,278 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { ShoppingCart, Check } from "lucide-react"
+
+const products = [
+  {
+    id: 1,
+    name: "OATE 37 Jersey Tee",
+    description:
+      "Limited edition 37 jersey-style T-shirt from OATE. Premium quality cotton blend with custom printing. Features the iconic OATE logo on the front with the number 37 and a large 37 design on the back.",
+    price: "45000 MMK",
+    priceNumeric: 45000,
+    image: "/images/oate-37-jersey.jpg",
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: ["Black"],
+    inStock: true,
+    isLimited: true,
+  },
+]
+
+export default function OATEStore() {
+  const [isPreOrderOpen, setIsPreOrderOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [orderComplete, setOrderComplete] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    size: "",
+    color: "",
+    quantity: 1,
+  })
+  const [cart, setCart] = useState([])
+
+  const handlePreOrder = (product) => {
+    setSelectedProduct(product)
+    setFormData({
+      ...formData,
+      size: product.sizes[0],
+      color: product.colors[0],
+    })
+    setIsPreOrderOpen(true)
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData({
+      ...formData,
+      [name]: value,
+    })
+  }
+
+  const handleSelectChange = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    })
+  }
+
+  const handleSubmitOrder = (e) => {
+    e.preventDefault()
+    // Here you would typically send the order data to your backend
+    console.log("Order submitted:", { product: selectedProduct, ...formData })
+
+    // Add to cart
+    setCart([
+      ...cart,
+      {
+        product: selectedProduct,
+        size: formData.size,
+        color: formData.color,
+        quantity: formData.quantity,
+      },
+    ])
+
+    // Show success state
+    setOrderComplete(true)
+
+    // Reset after 3 seconds
+    setTimeout(() => {
+      setOrderComplete(false)
+      setIsPreOrderOpen(false)
+    }, 3000)
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8">
+      <div className="p-4 max-w-6xl mx-auto">
+        <header className="mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">OATE Official Store</h1>
+          <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto">
+            Pre-order your exclusive OATE 37 Jersey Tee. Limited quantities available for this signature collection.
+          </p>
+
+          <div className="flex justify-end">
+            <Button variant="outline" className="flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              Cart ({cart.length})
+            </Button>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-8 max-w-xl mx-auto">
+          {products.map((product) => (
+            <Card
+              key={product.id}
+              className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+            >
+              <div className="relative">
+                <img src={product.image || "/placeholder.svg"} alt={product.name} className="w-full object-cover" />
+                {product.isLimited && (
+                  <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-600">Limited Edition</Badge>
+                )}
+              </div>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-xl font-semibold">{product.name}</h2>
+                  <span className="font-bold text-lg">{product.price}</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">{product.description}</p>
+
+                <div className="mb-4">
+                  <div className="flex gap-2 mb-2">
+                    <span className="text-sm font-medium">Available Sizes:</span>
+                    {product.sizes.map((size) => (
+                      <Badge key={size} variant="outline" className="text-xs">
+                        {size}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <Button className="w-full" onClick={() => handlePreOrder(product)}>
+                  Pre-order Now
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Dialog open={isPreOrderOpen} onOpenChange={setIsPreOrderOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>{orderComplete ? "Pre-order Complete!" : `Pre-order ${selectedProduct?.name}`}</DialogTitle>
+              <DialogDescription>
+                {orderComplete
+                  ? "Thank you for your pre-order. We will contact you soon with payment details."
+                  : "Fill out the form below to secure your pre-order."}
+              </DialogDescription>
+            </DialogHeader>
+
+            {orderComplete ? (
+              <div className="py-10 flex flex-col items-center justify-center">
+                <div className="bg-green-100 p-3 rounded-full mb-4">
+                  <Check className="h-10 w-10 text-green-600" />
+                </div>
+                <p className="text-center text-lg">Your pre-order has been received!</p>
+                <p className="text-center text-gray-500 mt-2">Order details have been sent to your email.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitOrder} className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="address">Delivery Address</Label>
+                  <Textarea
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="size">Size</Label>
+                    <Select value={formData.size} onValueChange={(value) => handleSelectChange("size", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedProduct?.sizes.map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Select
+                      value={String(formData.quantity)}
+                      onValueChange={(value) => handleSelectChange("quantity", Number.parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select quantity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <SelectItem key={num} value={String(num)}>
+                            {num}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span>Product:</span>
+                    <span className="font-medium">{selectedProduct?.name}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span>Size:</span>
+                    <span className="font-medium">{formData.size}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span>Price:</span>
+                    <span className="font-medium">{selectedProduct?.price}</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-2 border-t border-gray-200">
+                    <span>Total:</span>
+                    <span>{formData.quantity * (selectedProduct?.priceNumeric || 0)} MMK</span>
+                  </div>
+                </div>
+
+                <DialogFooter className="mt-4">
+                  <Button type="submit">Complete Pre-order</Button>
+                </DialogFooter>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}
